@@ -40,9 +40,9 @@ class ProfileVueController extends Controller
     public function store(Request $request)
     {
         $this->validate($request,[
-            'email'=>"min:3|unique:profiles",
-            "nama"=>"min:3",
-            'perkerjaan'=>'min:3',
+            'email'=>'required|unique:profiles',
+            'nama'=>'required|min:3',
+            'pekerjaan'=>'required',
         ]);
 
         
@@ -94,9 +94,9 @@ class ProfileVueController extends Controller
     public function update(Request $request, $id)
     {
         $this->validate($request,[
-            'email'=>"min:3|unique:profiles",
-            "nama"=>"min:3",
-            'perkerjaan'=>'min:3',
+            'email'=>'required|unique:profiles',
+            'nama'=>'required',
+            'perkerjaan'=>'required',
         ]);
 
         $vue =  \App\Profile::find($id);

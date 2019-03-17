@@ -38,8 +38,13 @@
         <div class="modal fade" id="kelas-modal-form" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
             <div class="modal-dialog" role="document">
                 <div class="modal-content">
+                    <div class="alert alert-danger" v-if="errors.length > 0">
+                        <ul>
+                            <li v-for="(error, index ) in errors" :key="index">{{error}}</li>
+                        </ul>
+                    </div>
                 <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">Biodata Form</h5>
+                    <h5 class="modal-title" id="exampleModalLabel">Profile Form</h5>
                      <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                      <span aria-hidden="true">&times;</span>
                      </button>
@@ -47,20 +52,20 @@
                 <div class="modal-body">
                     <div class="form-group">
                         <label>Email</label>
-                        <input type="text" name="Email" id="" class="form-control">
+                        <input type="text" v-model="profiles.email" name="Email" id="" class="form-control">
                      </div>
                     <div class="form-group">
                         <label>Nama</label>
-                        <input type="text" name="Nama" id="" class="form-control">
+                        <input type="text" v-model="profiles.nama" name="Nama" id="" class="form-control">
                      </div>
                     <div class="form-group">
                         <label>Pekerjaan</label>
-                        <input type="text" name="pekerajaan" id="" class="form-control">
+                        <input type="text" v-model="profiles.pekerjaan" name="pekerajaan" id="" class="form-control">
                      </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary">Save changes</button>
+                    <button type="button" @click="resetForm()" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" @click="addprofile()" class="btn btn-primary">Save changes</button>
                 </div>
                 </div>
             </div>
@@ -71,13 +76,21 @@
 export default {
     data(){
         return{
-            profile:[]
+            profile:[],
+            profiles:{
+                email : '',
+                nama : '',
+                pekerjaan : '',
+                
+            },
+            errors : [],
         }
     },
     methods:{
         showModal()
         {
             $("#kelas-modal-form").modal("show");
+            this.errors=[];
         },
         getprofile(){
             axios.get('/profilevue')
@@ -87,7 +100,39 @@ export default {
                 
         
             });
-        }    
+        },
+        addprofile(){
+            axios.post('/profilevue',{
+                email : this.profiles.email,
+                nama : this.profiles.nama,
+                pekerjaan : this.profiles.pekerjaan,
+            })
+            .then(response =>{
+                this.getprofile();
+                $("#kelas-modal-form").modal("hide");
+                this.resetForm();
+                
+            })
+            .catch(error=>{
+                this.errors = [];
+                if(error.response.data.errors.email){
+                    this.errors.push(error.response.data.errors.email[0])
+                }
+                if(error.response.data.errors.nama){
+                    this.errors.push(error.response.data.errors.nama[0])
+                }
+                if(error.response.data.errors.pekerjaan){
+                    this.errors.push(error.response.data.errors.pekerjaan[0])
+                }
+            });
+            
+        },
+        resetForm(){
+            this.profiles.nama = ' ' ,
+            this.profiles.email = ' ' ,
+            this.profiles.pekerjaan = ' ' 
+            }
+
     },
     mounted(){
         this.getprofile();
