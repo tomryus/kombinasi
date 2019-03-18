@@ -49049,18 +49049,30 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 
 /* harmony default export */ __webpack_exports__["default"] = ({
     data: function data() {
         return {
             profile: [],
             profiles: {
+                id: '',
                 email: '',
                 nama: '',
                 pekerjaan: ''
 
             },
-            errors: []
+            errors: [],
+            pagination: {}
         };
     },
 
@@ -49069,40 +49081,90 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
             $("#kelas-modal-form").modal("show");
             this.errors = [];
         },
-        getprofile: function getprofile() {
+        getprofile: function getprofile(page_url) {
             var _this = this;
 
-            axios.get('/profilevue').then(function (response) {
-                _this.profile = response.data.data_Profile;
+            var url = page_url || '/profilevue';
+            axios.get(url).then(function (response) {
+                _this.profile = response.data.data;
+                _this.profilePagination(response.data.meta, response.data.links);
                 console.log(_this.profile);
             });
         },
         addprofile: function addprofile() {
             var _this2 = this;
 
-            axios.post('/profilevue', {
-                email: this.profiles.email,
-                nama: this.profiles.nama,
-                pekerjaan: this.profiles.pekerjaan
-            }).then(function (response) {
-                _this2.getprofile();
-                $("#kelas-modal-form").modal("hide");
-                _this2.resetForm();
-            }).catch(function (error) {
-                _this2.errors = [];
-                if (error.response.data.errors.email) {
-                    _this2.errors.push(error.response.data.errors.email[0]);
-                }
-                if (error.response.data.errors.nama) {
-                    _this2.errors.push(error.response.data.errors.nama[0]);
-                }
-                if (error.response.data.errors.pekerjaan) {
-                    _this2.errors.push(error.response.data.errors.pekerjaan[0]);
-                }
-            });
+            if (this.edit != true) {
+                axios.post('/profilevue', {
+                    email: this.profiles.email,
+                    nama: this.profiles.nama,
+                    pekerjaan: this.profiles.pekerjaan
+                }).then(function (response) {
+                    _this2.getprofile();
+                    $("#kelas-modal-form").modal("hide");
+                    _this2.resetForm();
+                }).catch(function (error) {
+                    _this2.errors = [];
+                    if (error.response.data.errors.email) {
+                        _this2.errors.push(error.response.data.errors.email[0]);
+                    }
+                    if (error.response.data.errors.nama) {
+                        _this2.errors.push(error.response.data.errors.nama[0]);
+                    }
+                    if (error.response.data.errors.pekerjaan) {
+                        _this2.errors.push(error.response.data.errors.pekerjaan[0]);
+                    }
+                });
+            } else {
+                axios.put('/profilevue/' + this.profiles.id, {
+                    email: this.profiles.email,
+                    nama: this.profiles.nama,
+                    pekerjaan: this.profiles.pekerjaan
+                }).then(function (response) {
+                    _this2.getprofile();
+                    $("#kelas-modal-form").modal("hide");
+                    _this2.resetForm();
+                }).catch(function (error) {
+                    _this2.errors = [];
+                    if (error.response.data.errors.email) {
+                        _this2.errors.push(error.response.data.errors.email[0]);
+                    }
+                    if (error.response.data.errors.nama) {
+                        _this2.errors.push(error.response.data.errors.nama[0]);
+                    }
+                    if (error.response.data.errors.pekerjaan) {
+                        _this2.errors.push(error.response.data.errors.pekerjaan[0]);
+                    }
+                });
+            }
+        },
+        updateData: function updateData(profiles) {
+            this.edit = true;
+            this.profiles.id = profiles.id;
+            this.profiles.email = profiles.email;
+            this.profiles.nama = profiles.nama;
+            this.profiles.pekerjaan = profiles.pekerjaan;
+            this.showModal();
+        },
+        deleteprofile: function deleteprofile(profiles) {
+            var pilihan = confirm("apakah yakin dihapus ?");
+            if (pilihan === true) {
+                axios.delete('/profilevue/' + profiles.id); //pada delete fungsi this nya harus dihapus
+                this.getprofile();
+            }
         },
         resetForm: function resetForm() {
             this.profiles.nama = ' ', this.profiles.email = ' ', this.profiles.pekerjaan = ' ';
+        },
+        profilePagination: function profilePagination(meta, links) {
+            var pagination = {
+                current_page: meta.current_page,
+                last_page: meta.last_page,
+                next_page_url: links.next,
+                prev_page_url: links.prev,
+                total: meta.total
+            };
+            this.pagination = pagination;
         }
     },
     mounted: function mounted() {
@@ -49160,13 +49222,98 @@ var render = function() {
                       _vm._v(" "),
                       _c("td", [_vm._v(_vm._s(profile.pekerjaan))]),
                       _vm._v(" "),
-                      _vm._m(1, true)
+                      _c("td", [
+                        _c("a", { attrs: { href: "#" } }, [
+                          _c(
+                            "button",
+                            {
+                              staticClass: "btn btn-info btn-sm",
+                              on: {
+                                click: function($event) {
+                                  return _vm.updateData(profile)
+                                }
+                              }
+                            },
+                            [_vm._v("Edit Data")]
+                          )
+                        ]),
+                        _vm._v(" "),
+                        _c("a", { attrs: { href: "#" } }, [
+                          _c(
+                            "button",
+                            {
+                              staticClass: "btn btn-danger btn-sm",
+                              on: {
+                                click: function($event) {
+                                  return _vm.deleteprofile(profile)
+                                }
+                              }
+                            },
+                            [_vm._v("Hapus Data")]
+                          )
+                        ])
+                      ])
                     ])
                   }),
                   0
                 )
               ]
             )
+          ]),
+          _vm._v(" "),
+          _c("div", { staticClass: "card-footer text-muted" }, [
+            _c("ul", { staticClass: "pagination" }, [
+              _c(
+                "li",
+                {
+                  staticClass: "page-item",
+                  class: [{ disabled: !_vm.pagination.prev_page_url }],
+                  on: {
+                    click: function($event) {
+                      return _vm.getprofile(_vm.pagination.prev_page_url)
+                    }
+                  }
+                },
+                [
+                  _c("a", { staticClass: "page-link", attrs: { href: "#" } }, [
+                    _vm._v("Previous")
+                  ])
+                ]
+              ),
+              _vm._v(" "),
+              _c("li", { staticClass: "page-item disabled" }, [
+                _c("a", { staticClass: "page-link", attrs: { href: "#" } }, [
+                  _vm._v(
+                    "page " +
+                      _vm._s(_vm.pagination.current_page) +
+                      " of " +
+                      _vm._s(_vm.pagination.last_page)
+                  )
+                ])
+              ]),
+              _vm._v(" "),
+              _c(
+                "li",
+                {
+                  staticClass: "page-item",
+                  class: [{ disabled: !_vm.pagination.next_page_url }],
+                  on: {
+                    click: function($event) {
+                      return _vm.getprofile(_vm.pagination.next_page_url)
+                    }
+                  }
+                },
+                [
+                  _c("a", { staticClass: "page-link", attrs: { href: "#" } }, [
+                    _vm._v("Next")
+                  ])
+                ]
+              ),
+              _vm._v(" "),
+              _c("li", { staticClass: "page-link" }, [
+                _vm._v(" Total data : " + _vm._s(_vm.pagination.total))
+              ])
+            ])
           ])
         ])
       ])
@@ -49202,7 +49349,7 @@ var render = function() {
                   ])
                 : _vm._e(),
               _vm._v(" "),
-              _vm._m(2),
+              _vm._m(1),
               _vm._v(" "),
               _c("div", { staticClass: "modal-body" }, [
                 _c("div", { staticClass: "form-group" }, [
@@ -49336,24 +49483,6 @@ var staticRenderFns = [
         _c("th", [_vm._v("pekerjaan")]),
         _vm._v(" "),
         _c("th", [_vm._v("action")])
-      ])
-    ])
-  },
-  function() {
-    var _vm = this
-    var _h = _vm.$createElement
-    var _c = _vm._self._c || _h
-    return _c("td", [
-      _c("a", { attrs: { href: "#" } }, [
-        _c("button", { staticClass: "btn btn-info btn-sm" }, [
-          _vm._v("Tambah Data")
-        ])
-      ]),
-      _vm._v(" "),
-      _c("a", { attrs: { href: "#" } }, [
-        _c("button", { staticClass: "btn btn-danger btn-sm" }, [
-          _vm._v("Hapus Data")
-        ])
       ])
     ])
   },

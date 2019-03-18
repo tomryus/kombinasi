@@ -25,13 +25,23 @@
                                 <td>{{profile.nama}}</td>
                                 <td>{{profile.pekerjaan}}</td>
                                 <td>
-                                    <a href="#"><button class="btn btn-info btn-sm" >Tambah Data</button></a>
-                                    <a href="#"><button class="btn btn-danger btn-sm">Hapus Data</button></a>
+                                    <a href="#"><button @click="updateData(profile)" class="btn btn-info btn-sm" >Edit Data</button></a>
+                                    <a href="#"><button @click="deleteprofile(profile)" class="btn btn-danger btn-sm">Hapus Data</button></a>
                                 </td>
                             </tr>
                         </tbody>
                     </table>
                     </div>
+                    <!--pagination -->
+                    <div class="card-footer text-muted">
+                    <ul class="pagination">
+                    <li v-bind:class="[{disabled: !pagination.prev_page_url}]" @click="getprofile(pagination.prev_page_url)" class="page-item"><a class="page-link" href="#">Previous</a></li>
+                    <li class="page-item disabled"><a class="page-link" href="#">page {{pagination.current_page}} of {{pagination.last_page}}</a> </li>
+                    <li v-bind:class="[{disabled: !pagination.next_page_url}]" @click="getprofile(pagination.next_page_url)" class="page-item"><a  class="page-link" href="#">Next</a></li>
+                    <li class="page-link"> Total data : {{pagination.total}}</li>
+                    </ul>
+                    </div>
+                    <!-- pagination -->
                 </div>
             </div>
         </div>
@@ -78,12 +88,14 @@ export default {
         return{
             profile:[],
             profiles:{
+                id: '',
                 email : '',
                 nama : '',
                 pekerjaan : '',
                 
             },
             errors : [],
+            pagination : {}
         }
     },
     methods:{
@@ -92,17 +104,21 @@ export default {
             $("#kelas-modal-form").modal("show");
             this.errors=[];
         },
-        getprofile(){
-            axios.get('/profilevue')
+        getprofile(page_url){
+            let url = page_url || '/profilevue'; 
+            axios.get(url)
             .then(response =>{
-                this.profile=response.data.data_Profile; 
+                this.profile=response.data.data;
+                this.profilePagination(response.data.meta, response.data.links); 
                 console.log(this.profile);
                 
         
             });
         },
         addprofile(){
-            axios.post('/profilevue',{
+            if (this.edit != true)
+            {
+                axios.post('/profilevue',{
                 email : this.profiles.email,
                 nama : this.profiles.nama,
                 pekerjaan : this.profiles.pekerjaan,
@@ -125,15 +141,69 @@ export default {
                     this.errors.push(error.response.data.errors.pekerjaan[0])
                 }
             });
+            }
+            else{
+                axios.put('/profilevue/' + 
+                this.profiles.id,{
+                    email : this.profiles.email,
+                    nama : this.profiles.nama,
+                    pekerjaan : this.profiles.pekerjaan,
+                })
+                .then(response =>{
+                this.getprofile();
+                $("#kelas-modal-form").modal("hide");
+                this.resetForm();
+                
+            })
+            .catch(error=>{
+                this.errors = [];
+                if(error.response.data.errors.email){
+                    this.errors.push(error.response.data.errors.email[0])
+                }
+                if(error.response.data.errors.nama){
+                    this.errors.push(error.response.data.errors.nama[0])
+                }
+                if(error.response.data.errors.pekerjaan){
+                    this.errors.push(error.response.data.errors.pekerjaan[0])
+                }
+            });
+
+            }
             
+            
+        },
+        updateData(profiles){
+            this.edit = true;
+            this.profiles.id = profiles.id
+            this.profiles.email = profiles.email
+            this.profiles.nama = profiles.nama
+            this.profiles.pekerjaan = profiles.pekerjaan
+            this.showModal();
+        },
+        deleteprofile(profiles){
+            let pilihan = confirm("apakah yakin dihapus ?");
+            if (pilihan === true){
+            axios.delete('/profilevue/'+ profiles.id); //pada delete fungsi this nya harus dihapus
+            this.getprofile();
+            }
         },
         resetForm(){
             this.profiles.nama = ' ' ,
             this.profiles.email = ' ' ,
             this.profiles.pekerjaan = ' ' 
+        },
+        profilePagination(meta, links){
+            let pagination = {
+                current_page : meta.current_page,
+                last_page : meta.last_page,
+                next_page_url : links.next,
+                prev_page_url : links.prev,
+                total : meta.total,
             }
+            this.pagination = pagination;
+        },
 
-    },
+    } ,
     mounted(){
         this.getprofile();
     }

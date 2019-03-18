@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Http\Resources\ProfileResource;
 
 
 class ProfileVueController extends Controller
@@ -14,10 +15,12 @@ class ProfileVueController extends Controller
      */
     public function index()
     {
-        $vue= \App\Profile::all();
-        return response()->json([
-            'data_Profile' =>$vue //data itu koneksi ke vuescript di profilecomponent
-        ]);
+        $vue= \App\Profile::paginate(5);
+        return ProfileResource::collection($vue);
+        
+        //response()->json([
+         //   'data_Profile' =>$vue //data itu koneksi ke vuescript di profilecomponent
+        //]);
 
     }
 
@@ -54,7 +57,7 @@ class ProfileVueController extends Controller
         ]);
 
         return response()->json([
-            'data_Profile'=> $vuesave,
+            'data'=> $vuesave,
             'pesan' =>'sukses'
         ],201);
         
@@ -96,7 +99,7 @@ class ProfileVueController extends Controller
         $this->validate($request,[
             'email'=>'required|unique:profiles',
             'nama'=>'required',
-            'perkerjaan'=>'required',
+            'pekerjaan'=>'required',
         ]);
 
         $vue =  \App\Profile::find($id);
@@ -106,7 +109,7 @@ class ProfileVueController extends Controller
             $vue-> save();
 
         return response()->json([
-            'data_Profile' => $vue,
+            'data' => $vue,
             'pesan' => 'sukses',
 
         ],201);
